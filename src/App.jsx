@@ -1,48 +1,92 @@
-import { useEffect, useState } from 'react';
-import styles from './app.module.css';
-import TodoCard from '@/components/TodoCard';
+import { useState } from 'react';
+import { Typography, Box } from '@mui/material';
+import { DeleteTodoModal, CreatOrUpdateTodoModal } from './components/modals';
+import { useTodos } from './hooks';
+import { defaultFilters } from './static/staticData';
+import { TodoList, PageHeader } from '@/components';
 
 function App() {
-	const [todos, setTodos] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
+	const { todos, loading, onCreate, onDelete, onUpdate, query, setQuery } =
+		useTodos(defaultFilters);
+	const [data, setData] = useState(null);
 
-	useEffect(() => {
-		const loadTodos = async () => {
-			try {
-				const response = await fetch(
-					'https://jsonplaceholder.typicode.com/todos',
-				);
-				if (!response.ok) throw new Error('Failed to fetch todos');
-				const data = await response.json();
-				setTodos(data);
-			} catch (err) {
-				setError(err.message);
-			} finally {
-				setTimeout(() => setLoading(false), 1500);
-			}
-		};
+	const [open, setOpen] = useState(false);
+	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-		loadTodos();
-	}, []);
+	const handleClose = () => {
+		setOpen(false);
+		setData(null);
+	};
+
+	const handleCreate = (data) => {
+		onCreate(data);
+		handleClose;
+	};
+
+	const handleUpdate = (data) => {
+		onUpdate(data);
+		handleClose();
+	};
+
+	const handleDelete = (id) => {
+		onDelete(id);
+		setOpenDeleteModal(false);
+	};
+
+	const openUpdateModal = (data) => {
+		setOpen(true);
+		setData(data);
+	};
+
+	const handleOpenDeleteModal = (data) => {
+		setOpenDeleteModal(true);
+		setData(data);
+	};
+
+	const handleCloseDeleteModal = () => {
+		setOpenDeleteModal(false);
+		setData(null);
+	};
 
 	return (
-		<div className={styles.root}>
-			{loading ? (
-				<div className={styles.loader}></div>
-			) : error ? (
-				<p className={styles.error}>Error: {error}</p>
-			) : (
-				<div>
-					<p className={styles.title}>Todo List</p>
-					<div className={styles.todos}>
-						{todos.map((todo) => (
-							<TodoCard key={todo.id} todo={todo} />
-						))}
-					</div>
-				</div>
-			)}
-		</div>
+		<Box height={'100%'} display={'flex'} justifyContent={'center'}>
+			<Box width={1135}>
+				<Typography mb={2} variant="h3" fontFamily="monospace" fontWeight={700}>
+					Todo List
+				</Typography>
+
+				<Box
+					display={'flex'}
+					flexDirection={'column'}
+					justifyContent={'space-between'}
+				>
+					<PageHeader setOpen={setOpen} setQuery={setQuery} query={query} />
+					<TodoList
+						loading={loading}
+						todos={todos}
+						openUpdateModal={openUpdateModal}
+						openDeleteModal={handleOpenDeleteModal}
+						setQuery={setQuery}
+						query={query}
+					/>
+				</Box>
+			</Box>
+
+			<CreatOrUpdateTodoModal
+				open={open}
+				handleClose={handleClose}
+				initialValues={data}
+				onCreate={handleCreate}
+				onUpdate={handleUpdate}
+			/>
+
+			<DeleteTodoModal
+				open={openDeleteModal}
+				data={data}
+				handleClose={handleCloseDeleteModal}
+				onDelete={handleDelete}
+			/>
+		</Box>
 	);
 }
 
