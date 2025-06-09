@@ -2,18 +2,14 @@ import { Button, Typography, Box, TextField, Tooltip } from '@mui/material';
 import SortByAlphaIcon from '@mui/icons-material/SortByAlpha';
 import { defaultFilters } from '@/static/staticData';
 import PropTypes from 'prop-types';
-import { useDebouncedCallback } from 'use-debounce';
 import { useState } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const PageHeader = ({ setOpen, setQuery, query }) => {
 	const [search, setSearch] = useState('');
 
 	const ordering = query?.order === 'desc' ? 'asc' : 'desc';
 	const tooltipTitle = `Sort by ${ordering.toUpperCase()}`;
-
-	const debounced = useDebouncedCallback((value) => {
-		setQuery({ ...query, filter: value });
-	}, 1500);
 
 	const sortByAlpha = () =>
 		setQuery({
@@ -22,9 +18,13 @@ const PageHeader = ({ setOpen, setQuery, query }) => {
 			sort: 'title',
 		});
 
+	const debouncedSearch = useDebounce((searchTerm) => {
+		setQuery({ ...query, filter: searchTerm });
+	}, 1500);
+
 	const onChange = (value) => {
 		setSearch(value);
-		debounced(value);
+		debouncedSearch(value);
 	};
 
 	return (
