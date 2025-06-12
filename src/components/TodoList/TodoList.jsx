@@ -2,25 +2,20 @@ import PropTypes from 'prop-types';
 import { Box, Typography, Grid } from '@mui/material';
 import TodoCard from '../TodoCard/TodoCard';
 import styles from './todoList.module.css';
-import Pagination from '@/components/Pagination/Pagination';
 
-const TodoList = ({
-	loading = true,
-	todos,
-	openUpdateModal,
-	openDeleteModal,
-	query,
-	setQuery,
-}) => {
-	if (loading)
-		<Box
-			height={620}
-			alignItems={'center'}
-			justifyContent={'center'}
-			display={'flex'}
-		>
-			<Box className={styles.loader} />
-		</Box>;
+const TodoList = ({ loading = true, todos, openUpdateModal, openDeleteModal }) => {
+	if (loading) {
+		return (
+			<Box
+				height={620}
+				alignItems={'center'}
+				justifyContent={'center'}
+				display={'flex'}
+			>
+				<Box className={styles.loader} />
+			</Box>
+		);
+	}
 
 	if (!todos?.data?.length)
 		return (
@@ -41,22 +36,15 @@ const TodoList = ({
 					/>
 				))}
 			</Grid>
-			<Pagination
-				setQuery={setQuery}
-				query={query}
-				pageTotalCount={todos.meta?.pageTotalCount}
-			/>
 		</Box>
 	);
 };
 
 TodoList.propTypes = {
 	loading: PropTypes.bool.isRequired,
-	todos: PropTypes.array.isRequired,
+	todos: PropTypes.object.isRequired,
 	openUpdateModal: PropTypes.func.isRequired,
 	openDeleteModal: PropTypes.func.isRequired,
-	query: PropTypes.object,
-	setQuery: PropTypes.func,
 };
 
 export default TodoList;

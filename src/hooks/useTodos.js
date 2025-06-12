@@ -1,77 +1,76 @@
 import { useState, useEffect, useCallback } from 'react';
-
-const API_URL = '/api/todos';
+import { todosRef, todoRef } from '../firebase';
+import {
+	addDoc,
+	deleteDoc,
+	updateDoc,
+	where,
+	onSnapshot,
+	serverTimestamp,
+	orderBy,
+	query as FireabseQuery,
+} from 'firebase/firestore';
 
 export function useTodos(initialQuery) {
 	const [todos, setTodos] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [query, setQuery] = useState(initialQuery);
 
-	const fetchTodos = useCallback(async () => {
-		setLoading(true);
+	const prepareQuery = useCallback(() => {
+		const sort = query?.sort?.toString() || 'title';
+		const order = query.order.toString() || 'desc';
+		const searchItem = query?.filter?.toString() || '';
 
-		const params = new URLSearchParams({
-			_page: query.page.toString(),
-		});
+		let q = FireabseQuery(todosRef, orderBy(sort, order));
 
-		if (query.limit) params.set('_limit', query.limit.toString());
-		if (query.order) params.set('_order', query.order.toString());
-		if (query.sort) params.set('_sort', query.sort.toString());
-		if (query.filter) params.set('title_like', query.filter.toString());
+		if (searchItem) {
+			q = FireabseQuery(
+				todosRef,
+				where('title', '>=', searchItem),
+				where('title', '<=', searchItem + '\uf8ff'),
+				orderBy(sort, order),
+			);
+		}
 
-		const response = await fetch(`${API_URL}?${params.toString()}`);
-
-		const itemsCount = response.headers.get('X-Total-Count');
-		const pageTotalCount = getPageCount(itemsCount, query?.limit ?? 1);
-
-		const data = await response.json();
-
-		setTodos({ data: data, meta: { pageTotalCount } });
-		setLoading(false);
+		return q;
 	}, [query]);
 
 	useEffect(() => {
-		fetchTodos();
-	}, [fetchTodos]);
+		try {
+			const q = prepareQuery();
+			const unsubscribe = onSnapshot(q, async (snapshot) => {
+				const todosArray = snapshot.docs.map((doc) => ({
+					id: doc.id,
+					title: doc.data().title || '', // Default to empty string if title is missing
+					timestamp: doc.data().timestamp,
+				}));
 
-	const onCreate = useCallback(
-		async (data) => {
-			await fetch(API_URL, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json;charset=utf-8' },
-				body: JSON.stringify(data),
+				setTodos({ data: todosArray });
 			});
 
-			fetchTodos();
-		},
-		[fetchTodos],
-	);
+			// Cleanup listener on unmount or when query changes
+			return () => unsubscribe();
+		} catch (error) {
+			console.error('Error fetching todos:', error);
+		} finally {
+			setLoading(false);
+		}
+	}, [prepareQuery]);
 
-	const onDelete = useCallback(
-		async (id) => {
-			await fetch(`${API_URL}/${id}`, {
-				method: 'DELETE',
-			});
+	const onCreate = useCallback((data) => {
+		addDoc(todosRef, {
+			...data,
+			timestamp: serverTimestamp(),
+		});
+	}, []);
 
-			fetchTodos();
-		},
-		[fetchTodos],
-	);
+	const onDelete = useCallback((id) => {
+		deleteDoc(todoRef(id));
+	}, []);
 
-	const onUpdate = useCallback(
-		async (data) => {
-			await fetch(`${API_URL}/${data.id}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json;charset=utf-8' },
-				body: JSON.stringify(data),
-			});
-
-			fetchTodos();
-		},
-		[fetchTodos],
-	);
-
-	const getPageCount = (itemsCount = 1, limit = 1) => Math.ceil(itemsCount / limit);
+	const onUpdate = useCallback((data) => {
+		updateDoc(todoRef(data.id), data);
+	}, []);
 
 	return { todos, loading, onCreate, onDelete, onUpdate, query, setQuery };
 }

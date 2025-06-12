@@ -17,6 +17,7 @@
     "@hookform/resolvers": "^5.0.1",
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
+    "firebase": "^11.9.0",
     "json-server": "^0.17.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
