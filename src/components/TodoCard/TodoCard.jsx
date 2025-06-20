@@ -1,24 +1,33 @@
 import PropTypes from 'prop-types';
 import styles from './todoCard.module.css';
 import { Typography, Box } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { useNavigate } from 'react-router-dom';
 
-const TodoCard = ({ todo, onUpdate, onDelete }) => {
-	const todoCreatedAt = todo.timestamp?.toDate().toLocaleString();
+const TodoCard = ({ todo }) => {
+	const navigate = useNavigate();
+
+	const goToUpdate = () => navigate(`/todo/${todo.id}`);
 
 	return (
 		<Box className={styles.card}>
 			<Box className={styles.cardContent}>
 				<Box className={styles.cardTop}>
 					<Typography variant="body1" className={styles.cardTitle}>
-						N.{todoCreatedAt}
+						N.{todo.id}
 					</Typography>
 					<Typography variant="body1">Todo Card</Typography>
 				</Box>
-				<Box className={styles.instrumentsBlock}>
-					<EditIcon sx={{ mr: 2, cursor: 'pointer' }} onClick={onUpdate} />{' '}
-					<DeleteIcon sx={{ cursor: 'pointer' }} onClick={onDelete} />
+				<Box className={styles.instrumentsBlock} onClick={goToUpdate}>
+					<Typography
+						cursor={'pointer'}
+						variant="body1"
+						fontFamily={'cursive'}
+						mr={1}
+					>
+						Learn more
+					</Typography>
+					<MoreHorizIcon sx={{ cursor: 'pointer', fontSize: 30 }} />
 				</Box>
 				<Typography variant="body1" className={styles.cardBottom}>
 					{todo.title}
@@ -30,8 +39,6 @@ const TodoCard = ({ todo, onUpdate, onDelete }) => {
 
 TodoCard.propTypes = {
 	todo: PropTypes.object,
-	onUpdate: PropTypes.func,
-	onDelete: PropTypes.func,
 };
 
 export default TodoCard;

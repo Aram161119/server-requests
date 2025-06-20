@@ -1,20 +1,15 @@
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid } from '@mui/material';
 import TodoCard from '../TodoCard/TodoCard';
-import styles from './todoList.module.css';
+import Loader from '@/components/loader/Loader';
+import Pagination from '@/components/Pagination/Pagination';
+import { useNavigate } from 'react-router-dom';
 
-const TodoList = ({ loading = true, todos, openUpdateModal, openDeleteModal }) => {
+const TodoList = ({ loading = true, todos, query, setQuery }) => {
+	const navigate = useNavigate();
+
 	if (loading) {
-		return (
-			<Box
-				height={620}
-				alignItems={'center'}
-				justifyContent={'center'}
-				display={'flex'}
-			>
-				<Box className={styles.loader} />
-			</Box>
-		);
+		return <Loader />;
 	}
 
 	if (!todos?.data?.length)
@@ -31,8 +26,7 @@ const TodoList = ({ loading = true, todos, openUpdateModal, openDeleteModal }) =
 					<TodoCard
 						key={todo.id}
 						todo={todo}
-						onUpdate={() => openUpdateModal(todo)}
-						onDelete={() => openDeleteModal(todo)}
+						onUpdate={() => navigate(`/todo/${todo.id}`)}
 					/>
 				))}
 			</Grid>
@@ -42,9 +36,9 @@ const TodoList = ({ loading = true, todos, openUpdateModal, openDeleteModal }) =
 
 TodoList.propTypes = {
 	loading: PropTypes.bool.isRequired,
-	todos: PropTypes.object.isRequired,
-	openUpdateModal: PropTypes.func.isRequired,
-	openDeleteModal: PropTypes.func.isRequired,
+	todos: PropTypes.array.isRequired,
+	query: PropTypes.object,
+	setQuery: PropTypes.func,
 };
 
 export default TodoList;

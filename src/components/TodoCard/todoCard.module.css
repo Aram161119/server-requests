@@ -55,10 +55,13 @@
 .card:hover .instrumentsBlock {
 	text-align: center;
 	visibility: visible;
+	cursor: pointer;
 }
 
 .instrumentsBlock {
 	visibility: hidden;
+	display: flex;
+	justify-content: center;
 }
 
 .card:hover .cardContent {

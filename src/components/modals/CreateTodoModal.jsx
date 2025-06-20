@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Modal, Box, Typography, TextField, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { useNotification } from '@/hooks';
 
 const MODAL_STYLE = {
 	position: 'absolute',
@@ -26,13 +27,7 @@ const schema = yup.object().shape({
 		.required('Title is required'),
 });
 
-const CreatOrUpdateTodoModal = ({
-	open,
-	handleClose,
-	initialValues,
-	onCreate,
-	onUpdate,
-}) => {
+const CreateTodoModal = ({ open, handleClose, initialValues, onCreate }) => {
 	const {
 		register,
 		handleSubmit,
@@ -41,10 +36,7 @@ const CreatOrUpdateTodoModal = ({
 	} = useForm({
 		resolver: yupResolver(schema),
 	});
-
-	const isUpdateMode = Boolean(initialValues);
-
-	const title = useMemo(() => (isUpdateMode ? 'Update' : 'Create'), [isUpdateMode]);
+	const { showNotification } = useNotification();
 
 	useEffect(() => {
 		if (open) {
@@ -53,11 +45,8 @@ const CreatOrUpdateTodoModal = ({
 	}, [open, initialValues, reset]);
 
 	const handleFormSubmit = (data) => {
-		if (isUpdateMode) {
-			onUpdate(data);
-		} else {
-			onCreate(data);
-		}
+		onCreate(data);
+		showNotification('Todo successfully updated, please check))', 'success');
 		reset();
 		handleClose();
 	};
@@ -71,7 +60,7 @@ const CreatOrUpdateTodoModal = ({
 		>
 			<Box sx={MODAL_STYLE}>
 				<Typography variant="h5" component="h2" mb={2}>
-					{title} Todo
+					Create Todo
 				</Typography>
 
 				<Box
@@ -93,7 +82,7 @@ const CreatOrUpdateTodoModal = ({
 							Close
 						</Button>
 						<Button variant="contained" type="submit">
-							{title}
+							Create
 						</Button>
 					</Box>
 				</Box>
@@ -102,18 +91,17 @@ const CreatOrUpdateTodoModal = ({
 	);
 };
 
-CreatOrUpdateTodoModal.propTypes = {
+CreateTodoModal.propTypes = {
 	open: PropTypes.bool.isRequired,
 	handleClose: PropTypes.func.isRequired,
 	initialValues: PropTypes.shape({
 		title: PropTypes.string,
 	}),
 	onCreate: PropTypes.func.isRequired,
-	onUpdate: PropTypes.func.isRequired,
 };
 
-CreatOrUpdateTodoModal.defaultProps = {
+CreateTodoModal.defaultProps = {
 	initialValues: null,
 };
 
-export default CreatOrUpdateTodoModal;
+export default CreateTodoModal;

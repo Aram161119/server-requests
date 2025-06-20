@@ -36,41 +36,60 @@ export function useTodos(initialQuery) {
 	}, [query]);
 
 	useEffect(() => {
-		try {
-			const q = prepareQuery();
-			const unsubscribe = onSnapshot(q, async (snapshot) => {
-				const todosArray = snapshot.docs.map((doc) => ({
-					id: doc.id,
-					title: doc.data().title || '', // Default to empty string if title is missing
-					timestamp: doc.data().timestamp,
-				}));
+		fetchTodos();
+	}, [fetchTodos]);
 
-				setTodos({ data: todosArray });
+	// old version for discussing
+	const onCreate = useCallback(
+		async (data) => {
+			await fetch(API_URL, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json;charset=utf-8' },
+				body: JSON.stringify(data),
 			});
 
-			// Cleanup listener on unmount or when query changes
-			return () => unsubscribe();
-		} catch (error) {
-			console.error('Error fetching todos:', error);
-		} finally {
-			setLoading(false);
-		}
-	}, [prepareQuery]);
+			fetchTodos();
+		},
+		[fetchTodos],
+	);
 
-	const onCreate = useCallback((data) => {
-		addDoc(todosRef, {
-			...data,
-			timestamp: serverTimestamp(),
+	// new version , added error handler mini version
+	const onDelete = useCallback(async (id) => {
+		const resp = await fetch(`${API_URL}/${id}`, {
+			method: 'DELETE',
 		});
+
+		if (!resp.ok) {
+			throw new Error('Something went wrong');
+		}
 	}, []);
 
-	const onDelete = useCallback((id) => {
-		deleteDoc(todoRef(id));
+	const onUpdate = useCallback(async (data) => {
+		const resp = await fetch(`${API_URL}/${data.id}`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json;charset=utf-8' },
+			body: JSON.stringify(data),
+		});
+
+		if (!resp.ok) {
+			throw new Error('Something went wrong');
+		}
+	}, []);
+
+	const fetchTodo = useCallback(async (id) => {
+		try {
+			return await fetch(`${API_URL}/${id}`, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json;charset=utf-8' },
+			});
+		} catch (error) {
+			return error;
+		}
 	}, []);
 
 	const onUpdate = useCallback((data) => {
 		updateDoc(todoRef(data.id), data);
 	}, []);
 
-	return { todos, loading, onCreate, onDelete, onUpdate, query, setQuery };
+	return { todos, loading, onCreate, onDelete, onUpdate, fetchTodo, query, setQuery };
 }
