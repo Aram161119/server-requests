@@ -30,6 +30,11 @@ const TodoList = ({ loading = true, todos, query, setQuery }) => {
 					/>
 				))}
 			</Grid>
+			<Pagination
+				setQuery={setQuery}
+				query={query}
+				pageTotalCount={todos.meta?.pageTotalCount}
+			/>
 		</Box>
 	);
 };

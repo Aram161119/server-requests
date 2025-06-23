@@ -46,7 +46,7 @@ const CreateTodoModal = ({ open, handleClose, initialValues, onCreate }) => {
 
 	const handleFormSubmit = (data) => {
 		onCreate(data);
-		showNotification('Todo successfully updated, please check))', 'success');
+		showNotification('Todo successfully created, please check))', 'success');
 		reset();
 		handleClose();
 	};

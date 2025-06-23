@@ -1,38 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
-import { todosRef, todoRef } from '../firebase';
-import {
-	addDoc,
-	deleteDoc,
-	updateDoc,
-	where,
-	onSnapshot,
-	serverTimestamp,
-	orderBy,
-	query as FireabseQuery,
-} from 'firebase/firestore';
+
+const API_URL = '/api/todos';
 
 export function useTodos(initialQuery) {
 	const [todos, setTodos] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [query, setQuery] = useState(initialQuery);
 
-	const prepareQuery = useCallback(() => {
-		const sort = query?.sort?.toString() || 'title';
-		const order = query.order.toString() || 'desc';
-		const searchItem = query?.filter?.toString() || '';
+	const fetchTodos = useCallback(async () => {
+		setLoading(true);
 
-		let q = FireabseQuery(todosRef, orderBy(sort, order));
+		const params = new URLSearchParams({
+			_page: query.page.toString(),
+		});
 
-		if (searchItem) {
-			q = FireabseQuery(
-				todosRef,
-				where('title', '>=', searchItem),
-				where('title', '<=', searchItem + '\uf8ff'),
-				orderBy(sort, order),
-			);
-		}
+		if (query.limit) params.set('_limit', query.limit.toString());
+		if (query.order) params.set('_order', query.order.toString());
+		if (query.sort) params.set('_sort', query.sort.toString());
+		if (query.filter) params.set('title_like', query.filter.toString());
 
-		return q;
+		const response = await fetch(`${API_URL}?${params.toString()}`);
+
+		const itemsCount = response.headers.get('X-Total-Count');
+		const pageTotalCount = getPageCount(itemsCount, query?.limit ?? 1);
+
+		const data = await response.json();
+
+		setTodos({ data: data, meta: { pageTotalCount } });
+		setLoading(false);
 	}, [query]);
 
 	useEffect(() => {
@@ -87,9 +82,7 @@ export function useTodos(initialQuery) {
 		}
 	}, []);
 
-	const onUpdate = useCallback((data) => {
-		updateDoc(todoRef(data.id), data);
-	}, []);
+	const getPageCount = (itemsCount = 1, limit = 1) => Math.ceil(itemsCount / limit);
 
 	return { todos, loading, onCreate, onDelete, onUpdate, fetchTodo, query, setQuery };
 }
