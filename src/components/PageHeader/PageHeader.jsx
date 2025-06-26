@@ -2,11 +2,13 @@ import { Button, Typography, Box, TextField, Tooltip } from '@mui/material';
 import SortByAlphaIcon from '@mui/icons-material/SortByAlpha';
 import { defaultFilters } from '@/static/staticData';
 import PropTypes from 'prop-types';
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { TodosContext } from '@/context/context';
 
-const PageHeader = ({ setOpen, setQuery, query }) => {
+const PageHeader = ({ setOpen }) => {
 	const [search, setSearch] = useState('');
+	const { query, setQuery } = use(TodosContext);
 
 	const ordering = query?.order === 'desc' ? 'asc' : 'desc';
 	const tooltipTitle = `Sort by ${ordering.toUpperCase()}`;
@@ -67,8 +69,6 @@ const PageHeader = ({ setOpen, setQuery, query }) => {
 
 PageHeader.propTypes = {
 	setOpen: PropTypes.func.isRequired,
-	setQuery: PropTypes.func.isRequired,
-	query: PropTypes.object.isRequired,
 };
 
 export default PageHeader;

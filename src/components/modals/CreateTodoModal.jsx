@@ -4,7 +4,8 @@ import { Modal, Box, Typography, TextField, Button } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useNotification } from '@/hooks';
+import { use } from 'react';
+import { NotificationContext, TodosContext } from '@/context/context';
 
 const MODAL_STYLE = {
 	position: 'absolute',
@@ -27,7 +28,7 @@ const schema = yup.object().shape({
 		.required('Title is required'),
 });
 
-const CreateTodoModal = ({ open, handleClose, initialValues, onCreate }) => {
+const CreateTodoModal = ({ open, handleClose }) => {
 	const {
 		register,
 		handleSubmit,
@@ -36,19 +37,30 @@ const CreateTodoModal = ({ open, handleClose, initialValues, onCreate }) => {
 	} = useForm({
 		resolver: yupResolver(schema),
 	});
-	const { showNotification } = useNotification();
+	const { showNotification } = use(NotificationContext);
+	const { onCreate, fetchTodos } = use(TodosContext);
 
 	useEffect(() => {
 		if (open) {
-			reset(initialValues ?? DEFAULT_FORM_VALUES);
+			reset(DEFAULT_FORM_VALUES);
 		}
-	}, [open, initialValues, reset]);
+	}, [open, reset]);
 
-	const handleFormSubmit = (data) => {
-		onCreate(data);
-		showNotification('Todo successfully created, please check))', 'success');
-		reset();
-		handleClose();
+	const handleFormSubmit = async (data) => {
+		try {
+			await onCreate(data);
+			await fetchTodos();
+
+			showNotification(
+				'Todo successfully created and fetched table, please check))',
+				'success',
+			);
+		} catch (error) {
+			showNotification(error.message || 'Something went wrong', 'error');
+		} finally {
+			reset();
+			handleClose();
+		}
 	};
 
 	return (
@@ -94,14 +106,6 @@ const CreateTodoModal = ({ open, handleClose, initialValues, onCreate }) => {
 CreateTodoModal.propTypes = {
 	open: PropTypes.bool.isRequired,
 	handleClose: PropTypes.func.isRequired,
-	initialValues: PropTypes.shape({
-		title: PropTypes.string,
-	}),
-	onCreate: PropTypes.func.isRequired,
-};
-
-CreateTodoModal.defaultProps = {
-	initialValues: null,
 };
 
 export default CreateTodoModal;

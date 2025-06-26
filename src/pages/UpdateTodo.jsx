@@ -3,12 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useEffect, useState, useCallback } from 'react';
-import { useTodos, useNotification } from '@/hooks';
-import { defaultFilters } from '@/static/staticData';
+import { useEffect, useState, useCallback, use } from 'react';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { DeleteTodoModal } from '@/components/modals';
+import { NotificationContext, TodosContext } from '@/context/context';
 
 const schema = yup.object().shape({
 	title: yup
@@ -19,12 +18,13 @@ const schema = yup.object().shape({
 });
 
 const UpdateTodo = () => {
-	const { showNotification } = useNotification();
+	const { showNotification } = use(NotificationContext);
+	const { onUpdate, fetchTodo } = use(TodosContext);
+
 	const [todo, setTodo] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-	const { onUpdate, onDelete, fetchTodo } = useTodos(defaultFilters);
 	const { id } = useParams();
 	const navigate = useNavigate();
 
@@ -44,45 +44,27 @@ const UpdateTodo = () => {
 
 	const fetchTodoHandler = useCallback(async () => {
 		try {
-			const response = await fetchTodo(id);
-
-			if (!response.ok) {
-				if (response.status === 404) {
-					navigate('/404', { replace: true });
-				} else {
-					throw new Error('Server error');
-				}
-				return;
-			}
-
-			const data = await response.json();
-			setTodo(data);
-		} catch (e) {
-			showNotification(e.message, 'error');
+			const resp = await fetchTodo(id);
+			setTodo(resp);
+		} catch (error) {
+			showNotification(error.message || 'Something went wrong', 'error');
 		}
-	}, [fetchTodo, id, navigate, showNotification]);
+	}, [fetchTodo, id, showNotification]);
 
-	const handleFormSubmit = (data) => {
-		setLoading(true);
+	const handleFormSubmit = async (data) => {
+		try {
+			setLoading(true);
 
-		onUpdate(data)
-			.then(() => {
-				fetchTodoHandler();
-				showNotification('Todo successfully updated, please check))', 'success');
-				setLoading(false);
-			})
-			.catch((err) => showNotification(err.message, 'warning'))
-			.finally(() => reset());
-	};
+			const resp = await onUpdate(data);
+			setTodo(resp);
 
-	const handleDelete = () => {
-		onDelete(todo.id)
-			.then(() => {
-				setOpenDeleteModal(false);
-				showNotification('Todo successfully deleted, please check))', 'success');
-				navigate('/');
-			})
-			.catch((err) => showNotification(err.message, 'warning'));
+			showNotification('Todo successfully updated, please check))', 'success');
+		} catch (error) {
+			showNotification(error.message, 'warning');
+		} finally {
+			reset();
+			setLoading(false);
+		}
 	};
 
 	if (!todo) return null;
@@ -133,7 +115,6 @@ const UpdateTodo = () => {
 				open={openDeleteModal}
 				data={todo}
 				handleClose={() => setOpenDeleteModal(false)}
-				onDelete={handleDelete}
 			/>
 		</Box>
 	);

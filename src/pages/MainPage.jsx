@@ -1,25 +1,10 @@
 import { useState } from 'react';
 import { Typography, Box } from '@mui/material';
 import { CreateTodoModal } from '@/components/modals';
-import { useTodos } from '@/hooks';
-import { defaultFilters } from '@/static/staticData';
 import { TodoList, PageHeader } from '@/components';
 
 const MainPage = () => {
-	const { todos, loading, onCreate, query, setQuery } = useTodos(defaultFilters);
-	const [data, setData] = useState(null);
-
 	const [open, setOpen] = useState(false);
-
-	const handleClose = () => {
-		setOpen(false);
-		setData(null);
-	};
-
-	const handleCreate = (data) => {
-		onCreate(data);
-		handleClose;
-	};
 
 	return (
 		<Box height={'100%'} display={'flex'} justifyContent={'center'}>
@@ -33,22 +18,12 @@ const MainPage = () => {
 					flexDirection={'column'}
 					justifyContent={'space-between'}
 				>
-					<PageHeader setOpen={setOpen} setQuery={setQuery} query={query} />
-					<TodoList
-						loading={loading}
-						todos={todos}
-						setQuery={setQuery}
-						query={query}
-					/>
+					<PageHeader setOpen={setOpen} />
+					<TodoList />
 				</Box>
 			</Box>
 
-			<CreateTodoModal
-				open={open}
-				handleClose={handleClose}
-				initialValues={data}
-				onCreate={handleCreate}
-			/>
+			<CreateTodoModal open={open} handleClose={() => setOpen(false)} />
 		</Box>
 	);
 };

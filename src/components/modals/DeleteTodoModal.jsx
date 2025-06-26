@@ -1,6 +1,9 @@
 import { Button, Box, Typography, Modal } from '@mui/material';
 import PropTypes from 'prop-types';
 import { useForm } from 'react-hook-form';
+import { use } from 'react';
+import { TodosContext, NotificationContext } from '@/context/context';
+import { useNavigate } from 'react-router-dom';
 
 const style = {
 	position: 'absolute',
@@ -13,12 +16,25 @@ const style = {
 	p: 3,
 };
 
-const DeleteTodoModal = ({ open, data, handleClose, onDelete }) => {
+const DeleteTodoModal = ({ open, data, handleClose }) => {
 	const { handleSubmit } = useForm();
+	const navigate = useNavigate();
 
-	const onSubmit = () => {
-		onDelete(data.id);
-		handleClose();
+	const { onDelete, fetchTodos } = use(TodosContext);
+	const { showNotification } = use(NotificationContext);
+
+	const onSubmit = async () => {
+		try {
+			await onDelete(data.id);
+			await fetchTodos();
+
+			showNotification('Todo successfully deleted, please check))', 'success');
+			navigate('/');
+		} catch (err) {
+			showNotification(err.message, 'error');
+		} finally {
+			handleClose();
+		}
 	};
 
 	return (
@@ -62,7 +78,6 @@ DeleteTodoModal.propTypes = {
 	open: PropTypes.bool,
 	data: PropTypes.any,
 	handleClose: PropTypes.func,
-	onDelete: PropTypes.func,
 };
 
 export default DeleteTodoModal;

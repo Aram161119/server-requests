@@ -1,14 +1,10 @@
-import { useState } from 'react';
 import { Pagination as MuiPagination, Box } from '@mui/material';
 import PropTypes from 'prop-types';
 
-const Pagination = ({ query, setQuery, pageTotalCount }) => {
-	const [page, setPage] = useState(query.page);
-
+const Pagination = ({ onChange, page, pageTotalCount }) => {
 	const handleChange = (event, value) => {
 		if (value === page) return;
-		setQuery({ ...query, page: value });
-		setPage(value);
+		onChange(value);
 	};
 
 	return (
@@ -28,8 +24,8 @@ const Pagination = ({ query, setQuery, pageTotalCount }) => {
 };
 
 Pagination.propTypes = {
-	query: PropTypes.object,
-	setQuery: PropTypes.func,
+	onChange: PropTypes.func,
+	page: PropTypes.number,
 	pageTotalCount: PropTypes.number,
 };
 

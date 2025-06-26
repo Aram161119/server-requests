@@ -1,12 +1,12 @@
-import PropTypes from 'prop-types';
 import { Box, Typography, Grid } from '@mui/material';
 import TodoCard from '../TodoCard/TodoCard';
 import Loader from '@/components/loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
-import { useNavigate } from 'react-router-dom';
+import { use } from 'react';
+import { TodosContext } from '@/context/context';
 
-const TodoList = ({ loading = true, todos, query, setQuery }) => {
-	const navigate = useNavigate();
+const TodoList = () => {
+	const { query, setQuery, todos, loading } = use(TodosContext);
 
 	if (loading) {
 		return <Loader />;
@@ -19,31 +19,22 @@ const TodoList = ({ loading = true, todos, query, setQuery }) => {
 			</Typography>
 		);
 
+	const onChange = (value) => setQuery({ ...query, page: value });
+
 	return (
 		<Box pt={3}>
 			<Grid container spacing={3}>
 				{todos?.data.map((todo) => (
-					<TodoCard
-						key={todo.id}
-						todo={todo}
-						onUpdate={() => navigate(`/todo/${todo.id}`)}
-					/>
+					<TodoCard key={todo.id} todo={todo} />
 				))}
 			</Grid>
 			<Pagination
-				setQuery={setQuery}
-				query={query}
+				onChange={onChange}
+				page={query.page}
 				pageTotalCount={todos.meta?.pageTotalCount}
 			/>
 		</Box>
 	);
-};
-
-TodoList.propTypes = {
-	loading: PropTypes.bool.isRequired,
-	todos: PropTypes.array.isRequired,
-	query: PropTypes.object,
-	setQuery: PropTypes.func,
 };
 
 export default TodoList;

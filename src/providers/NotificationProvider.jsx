@@ -1,35 +1,38 @@
 import PropTypes from 'prop-types';
-import { Alert, AlertTitle } from '@mui/material';
 import { useState, useCallback } from 'react';
-import { NotificationContext } from '@/context';
+import { NotificationContext } from '@/context/context';
+import AlertVariant1 from '@/components/alerts/AlertVariant1';
+
+const alertComponents = {
+	variant1: AlertVariant1,
+};
 
 export const NotificationProvider = ({ children }) => {
 	const [notification, setNotification] = useState(null);
 
-	const showNotification = useCallback((message, variant = 'info', duration = 3000) => {
-		setNotification({ message, variant, duration });
+	const showNotification = useCallback(
+		(message, variant = 'info', duration = 3000, alertVariant = 'variant1') => {
+			setNotification({ message, variant, duration, alertVariant });
 
-		setTimeout(() => setNotification(null), duration);
-	}, []);
+			setTimeout(() => setNotification(null), duration);
+		},
+		[],
+	);
+
+	const AlertComponent = notification
+		? alertComponents[notification.alertVariant] || AlertVariant1
+		: null;
 
 	return (
-		<NotificationContext.Provider value={{ showNotification }}>
+		<NotificationContext value={{ showNotification }}>
 			{children}
 			{notification && (
-				<Alert
-					sx={{
-						position: 'absolute',
-						top: 16,
-						right: 24,
-					}}
-					severity={notification.variant}
-					onClose={() => {}}
-				>
-					<AlertTitle>{notification.variant.toUpperCase()}</AlertTitle>
-					{notification.message}
-				</Alert>
+				<AlertComponent
+					variant={notification.variant}
+					message={notification.message}
+				/>
 			)}
-		</NotificationContext.Provider>
+		</NotificationContext>
 	);
 };
 
