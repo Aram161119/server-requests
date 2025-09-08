@@ -1,10 +1,18 @@
-import { Pagination as MuiPagination, Box } from '@mui/material';
+import { ACTION_TYPE } from '@/actions';
+import { selectFilters } from '@/selectors';
+import { Box, Pagination as MuiPagination } from '@mui/material';
 import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
 
-const Pagination = ({ onChange, page, pageTotalCount }) => {
+const Pagination = ({ pageTotalCount }) => {
+	const filters = useSelector(selectFilters);
+	const dispatch = useDispatch();
+
+	const page = filters.page;
+
 	const handleChange = (event, value) => {
 		if (value === page) return;
-		onChange(value);
+		dispatch({ type: ACTION_TYPE.SET_PAGE, payload: value });
 	};
 
 	return (
@@ -24,8 +32,6 @@ const Pagination = ({ onChange, page, pageTotalCount }) => {
 };
 
 Pagination.propTypes = {
-	onChange: PropTypes.func,
-	page: PropTypes.number,
 	pageTotalCount: PropTypes.number,
 };
 

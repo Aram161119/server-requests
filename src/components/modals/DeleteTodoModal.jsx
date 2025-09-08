@@ -1,8 +1,10 @@
-import { Button, Box, Typography, Modal } from '@mui/material';
+import { deleteTodoAsync } from '@/actions';
+import { NotificationContext } from '@/context/context';
+import { Box, Button, Modal, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
-import { useForm } from 'react-hook-form';
 import { use } from 'react';
-import { TodosContext, NotificationContext } from '@/context/context';
+import { useForm } from 'react-hook-form';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 const style = {
@@ -19,14 +21,13 @@ const style = {
 const DeleteTodoModal = ({ open, data, handleClose }) => {
 	const { handleSubmit } = useForm();
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
-	const { onDelete, fetchTodos } = use(TodosContext);
 	const { showNotification } = use(NotificationContext);
 
 	const onSubmit = async () => {
 		try {
-			await onDelete(data.id);
-			await fetchTodos();
+			dispatch(deleteTodoAsync(data.id));
 
 			showNotification('Todo successfully deleted, please check))', 'success');
 			navigate('/');

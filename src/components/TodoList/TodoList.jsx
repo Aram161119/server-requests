@@ -1,12 +1,22 @@
-import { Box, Typography, Grid } from '@mui/material';
-import TodoCard from '../TodoCard/TodoCard';
+import { fetchTodosAsync } from '@/actions';
 import Loader from '@/components/loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
-import { use } from 'react';
-import { TodosContext } from '@/context/context';
+import { selectFilters, selectLoading, selectTodos } from '@/selectors';
+import { Box, Grid, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import TodoCard from '../TodoCard/TodoCard';
 
 const TodoList = () => {
-	const { query, setQuery, todos, loading } = use(TodosContext);
+	const loading = useSelector(selectLoading);
+	const todos = useSelector(selectTodos);
+	const filters = useSelector(selectFilters);
+
+	const dispatch = useDispatch();
+
+	useEffect(() => {
+		dispatch(fetchTodosAsync(filters));
+	}, [dispatch, filters]);
 
 	if (loading) {
 		return <Loader />;
@@ -19,8 +29,6 @@ const TodoList = () => {
 			</Typography>
 		);
 
-	const onChange = (value) => setQuery({ ...query, page: value });
-
 	return (
 		<Box pt={3}>
 			<Grid container spacing={3}>
@@ -28,11 +36,7 @@ const TodoList = () => {
 					<TodoCard key={todo.id} todo={todo} />
 				))}
 			</Grid>
-			<Pagination
-				onChange={onChange}
-				page={query.page}
-				pageTotalCount={todos.meta?.pageTotalCount}
-			/>
+			<Pagination pageTotalCount={todos.meta?.pageTotalCount} />
 		</Box>
 	);
 };

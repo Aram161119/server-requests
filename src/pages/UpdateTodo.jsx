@@ -1,13 +1,16 @@
-import { Box, Typography, Button, TextField } from '@mui/material';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { updateTodoAsync } from '@/actions';
+import { DeleteTodoModal } from '@/components/modals';
+import { NotificationContext } from '@/context/context';
+import { selectLoading, selectTodoById } from '@/selectors';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { useEffect, useState, useCallback, use } from 'react';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import { DeleteTodoModal } from '@/components/modals';
-import { NotificationContext, TodosContext } from '@/context/context';
+import { Box, Button, TextField, Typography } from '@mui/material';
+import { use, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import * as yup from 'yup';
 
 const schema = yup.object().shape({
 	title: yup
@@ -19,14 +22,13 @@ const schema = yup.object().shape({
 
 const UpdateTodo = () => {
 	const { showNotification } = use(NotificationContext);
-	const { onUpdate, fetchTodo } = use(TodosContext);
-
-	const [todo, setTodo] = useState(null);
-	const [loading, setLoading] = useState(false);
 	const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-	const { id } = useParams();
+	const loading = useSelector(selectLoading);
+	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const { id } = useParams();
+	const todo = useSelector(selectTodoById(Number(id)));
 
 	const {
 		register,
@@ -38,32 +40,14 @@ const UpdateTodo = () => {
 		values: todo,
 	});
 
-	useEffect(() => {
-		fetchTodoHandler();
-	}, []);
-
-	const fetchTodoHandler = useCallback(async () => {
-		try {
-			const resp = await fetchTodo(id);
-			setTodo(resp);
-		} catch (error) {
-			showNotification(error.message || 'Something went wrong', 'error');
-		}
-	}, [fetchTodo, id, showNotification]);
-
 	const handleFormSubmit = async (data) => {
 		try {
-			setLoading(true);
-
-			const resp = await onUpdate(data);
-			setTodo(resp);
-
+			dispatch(updateTodoAsync({ id: todo.id, ...data }));
 			showNotification('Todo successfully updated, please check))', 'success');
 		} catch (error) {
 			showNotification(error.message, 'warning');
 		} finally {
 			reset();
-			setLoading(false);
 		}
 	};
 

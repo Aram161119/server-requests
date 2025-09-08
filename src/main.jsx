@@ -1,18 +1,20 @@
+import { NotificationProvider } from '@/providers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import { NotificationProvider, TodosProvider } from '@/providers';
 import App from './App.jsx';
 import './index.css';
+import { store } from './store.js';
 
 createRoot(document.getElementById('root')).render(
 	<StrictMode>
-		<NotificationProvider>
-			<BrowserRouter>
-				<TodosProvider>
+		<Provider store={store}>
+			<NotificationProvider>
+				<BrowserRouter>
 					<App />
-				</TodosProvider>
-			</BrowserRouter>
-		</NotificationProvider>
+				</BrowserRouter>
+			</NotificationProvider>
+		</Provider>
 	</StrictMode>,
 );

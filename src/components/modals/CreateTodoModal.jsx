@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { Modal, Box, Typography, TextField, Button } from '@mui/material';
-import { useForm } from 'react-hook-form';
+import { createTodoAsync, fetchTodosAsync } from '@/actions';
+import { NotificationContext } from '@/context/context';
+import { selectFilters } from '@/selectors';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { Box, Button, Modal, TextField, Typography } from '@mui/material';
+import PropTypes from 'prop-types';
+import { use, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
 import * as yup from 'yup';
-import { use } from 'react';
-import { NotificationContext, TodosContext } from '@/context/context';
 
 const MODAL_STYLE = {
 	position: 'absolute',
@@ -38,7 +40,8 @@ const CreateTodoModal = ({ open, handleClose }) => {
 		resolver: yupResolver(schema),
 	});
 	const { showNotification } = use(NotificationContext);
-	const { onCreate, fetchTodos } = use(TodosContext);
+	const dispatch = useDispatch();
+	const filters = useSelector(selectFilters);
 
 	useEffect(() => {
 		if (open) {
@@ -48,8 +51,8 @@ const CreateTodoModal = ({ open, handleClose }) => {
 
 	const handleFormSubmit = async (data) => {
 		try {
-			await onCreate(data);
-			await fetchTodos();
+			dispatch(createTodoAsync(data));
+			dispatch(fetchTodosAsync(filters));
 
 			showNotification(
 				'Todo successfully created and fetched table, please check))',
